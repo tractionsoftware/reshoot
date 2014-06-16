@@ -194,24 +194,34 @@ public class Reshoot {
     private static void takeSingleScreenshot(RemoteWebDriver driver, Configuration configuration, Screenshot screenshot) {
         driver.get(screenshot.url);
 
+        // special handling for TeamPage
+        loginAndWaitForTeampage(driver, configuration, screenshot);
+
+        Region browser = notNull(screenshot.browser, configuration.browser);
+        setBrowserSize(driver, browser);
+
+        saveScreenshot(driver, screenshot);
+    }
+
+    private static void loginAndWaitForTeampage(RemoteWebDriver driver, Configuration configuration, Screenshot screenshot) {
         // support top-level defaults
         String username = notNull(screenshot.username, configuration.username);
         String password = notNull(screenshot.password, configuration.password);
-        Region browser = notNull(screenshot.browser, configuration.browser);
 
         try {
+            // attempt to identify and use the login page
             LoginPage login = PageFactory.initElements(driver, LoginPage.class);
             login.login(username, password);
         }
         catch (Exception e) {}
 
-        ProteusPage home = new ProteusPage(driver, "");
-        PageFactory.initElements(driver, home);
-        home.waitForLoadingCycle();
-
-        setBrowserSize(driver, browser);
-
-        saveScreenshot(driver, screenshot);
+        try {
+            // wait to allow proteus to load content
+            ProteusPage proteus = new ProteusPage(driver, "");
+            PageFactory.initElements(driver, proteus);
+            proteus.waitForLoadingCycle();
+        }
+        catch (Exception e) {}
     }
 
     private static <T> T notNull(T... list) {

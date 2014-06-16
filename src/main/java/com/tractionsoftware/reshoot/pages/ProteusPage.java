@@ -35,6 +35,10 @@ public class ProteusPage {
     public ProteusPage(WebDriver driver, String htmlTitlePrefix) {
         this.driver = driver;
 
+        if (!isProteusPage(driver)) {
+            throw new IllegalStateException("This page does not appear to be a Proteus page.");
+        }
+
         waitForProteusIdle(60);
 
         // make sure we're on the right page. this avoids
@@ -45,6 +49,18 @@ public class ProteusPage {
 
     public String getTitle() {
         return driver.getTitle();
+    }
+
+    /**
+     * Checks to see if this is a Proteus page.
+     */
+    public static final boolean isProteusPage(WebDriver driver) {
+        try {
+            return driver.findElement(By.id("proteus-color-css")) != null;
+        }
+        catch (NoSuchElementException e) {
+            return false;
+        }
     }
 
     // ----------------------------------------------------------------------
