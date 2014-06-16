@@ -5,7 +5,9 @@ Reshoot uses Selenium WebDriver to automate shooting product screenshots.
 
 We created this tool to make it easy to keep our product screenshots up-to-date with the latest version. A JSON configuration file specifies the URLs and crop dimensions of the screenshots.
 
-Example screenshots.json:
+## Example
+
+Create a configuration file `screenshots.json`:
 
 ```json
 {
@@ -20,8 +22,27 @@ Example screenshots.json:
 }
 ```
 
+Run reshoot with the configuration file:
+
 ```
-java -jar Reshoot-1.0.jar --chrome screenshots.json
+java -jar Reshoot-1.0.jar screenshots.json
 ```
+
+## Usage
+
+```
+Reshoot uses Selenium WebDriver to automate shooting product screenshots
+
+  Usage:
+    java -jar Reshoot.jar [options] [files...]
+
+  Options:
+    --chrome   use Chrome (for retina screenshots on retina displays)
+    --firefox  use Firefox (for full scrollheight screenshots)
+
+  Documentation:
+    https://github.com/tractionsoftware/reshoot
+```
+
 
 This is very much a work-in-progress. 
