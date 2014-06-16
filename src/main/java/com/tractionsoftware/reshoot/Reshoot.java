@@ -34,9 +34,9 @@ import org.openqa.selenium.support.PageFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.traction.pages.LoginPage;
-import com.traction.pages.ProteusPage;
-import com.traction.test.TractionWebdriverUtils;
+import com.tractionsoftware.reshoot.pages.LoginPage;
+import com.tractionsoftware.reshoot.pages.ProteusPage;
+import com.tractionsoftware.reshoot.util.TractionWebdriverUtils;
 
 public class Reshoot {
 
