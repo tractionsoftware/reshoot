@@ -9,20 +9,15 @@ Example:
 
 ```
 {
-        "username": "admin",
-        "password": "",
         "screenshots": [
-                // logo image
                 {
-                        "url": "http://localhost:8000",
-                        "output": "target/logo.png",
+                        "url": "http://google.com",
+                        "output": "target/google.png",
                         "browser": { "width": 980 },
-                        "crop": { "left": 15, "top": 10, "width": 80, "height": 80 }
+                        "crop": { "left": 40, "top": 50, "width": 900, "height": 450 }
                 }
         ]
 }
 ```
-
-Note: username/password options are only useful for Teampage login.
 
 This is very much a work-in-progress. 
