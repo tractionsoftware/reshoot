@@ -1,0 +1,13 @@
+{
+        "username": "admin",
+        "password": "",
+        "screenshots": [
+                // logo image
+                {
+                        "url": "http://localhost:8000",
+                        "output": "target/logo.png",
+                        "browser": { "width": 980 },
+                        "crop": { "left": 15, "top": 10, "width": 80, "height": 80 }
+                }
+        ]
+}
