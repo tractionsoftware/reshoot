@@ -1,7 +1,7 @@
 reshoot
 =======
 
-Uses Selenium WebDriver to take product screenshots
+Reshoot uses Selenium WebDriver to automate shooting product screenshots.
 
 We created this tool to make it easy to keep our product screenshots up-to-date with the latest version. A JSON configuration file specifies the URLs and crop dimensions of the screenshots.
 
