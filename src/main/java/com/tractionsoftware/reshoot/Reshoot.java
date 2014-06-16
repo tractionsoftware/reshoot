@@ -16,9 +16,17 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.ParseException;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -118,14 +126,13 @@ public class Reshoot {
      */
     public static void main(String[] args) {
 
-        if (args.length == 0) {
-            showUsageAndExit();
-        }
+        CommandLine cmd = parseCommandLine(args);
 
-        for (String arg : args) {
-            Configuration config = parseConfigurationFile(arg);
+        String[] files = cmd.getArgs();
+        for (String file : files) {
+            Configuration config = parseConfigurationFile(file);
 
-            RemoteWebDriver driver = createDriver();
+            RemoteWebDriver driver = createDriver(cmd);
             for (Screenshot screenshot : config.screenshots) {
                 takeSingleScreenshot(driver, config, screenshot);
             }
@@ -133,15 +140,54 @@ public class Reshoot {
         }
     }
 
-    private static void showUsageAndExit() {
-        System.err.println("Reshoot uses Selenium WebDriver to take product screenshots");
-        System.err.println();
-        System.err.println("  Usage:");
-        System.err.println("    java -jar Reshoot.jar [files...]");
-        System.err.println();
-        System.err.println("  Documentation:");
-        System.err.println("    https://github.com/tractionsoftware/reshoot");
-        System.err.println();
+    private static CommandLine parseCommandLine(String[] args) {
+        CommandLineParser parser = new GnuParser();
+        org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
+
+        // create the command-line options
+        Option chrome = OptionBuilder.withDescription("use Chrome (for retina screenshots on retina displays)").withLongOpt("chrome").create();
+        Option firefox = OptionBuilder.withDescription("use Firefox (for full scrollheight screenshots)").withLongOpt("firefox").create();
+
+        options.addOption(chrome);
+        options.addOption(firefox);
+
+        // attempt to parse them, printing help if it fails
+        try {
+            CommandLine cmd = parser.parse(options, args);
+
+            // make sure we have some files to process
+            if (cmd.getArgList().isEmpty()) {
+                showUsageAndExit(options);
+            }
+
+            return cmd;
+        }
+        catch (ParseException e) {
+            showUsageAndExit(options);
+        }
+
+        return null;
+    }
+
+    private static void showUsageAndExit(org.apache.commons.cli.Options options) {
+        PrintWriter pw = new PrintWriter(System.out);
+
+        pw.println("Reshoot uses Selenium WebDriver to automate shooting product screenshots");
+        pw.println();
+        pw.println("  Usage:");
+        pw.println("    java -jar Reshoot.jar [options] [files...]");
+        pw.println();
+        pw.println("  Options:");
+
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printOptions(pw, 74, options, 1, 2);
+
+        pw.println();
+        pw.println("  Documentation:");
+        pw.println("    https://github.com/tractionsoftware/reshoot");
+        pw.println();
+
+        pw.flush();
         System.exit(1);
     }
 
@@ -204,9 +250,14 @@ public class Reshoot {
         }
     }
 
-    private static RemoteWebDriver createDriver() {
-        return TractionWebdriverUtils.createFirefoxDriver();
-        //return TractionWebdriverUtils.createChromeDriver();
+    private static RemoteWebDriver createDriver(CommandLine cmd) {
+        if (cmd.hasOption("firefox")) {
+            return TractionWebdriverUtils.createFirefoxDriver();
+        }
+        else {
+            // cmd.hasOption("chrome")
+            return TractionWebdriverUtils.createChromeDriver();
+        }
     }
 
     private static boolean saveScreenshot(TakesScreenshot driver, Screenshot screenshot) {
