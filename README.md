@@ -7,16 +7,16 @@ We created this tool to make it easy to keep our product screenshots up-to-date 
 
 Example:
 
-```
+```json
 {
-        "screenshots": [
-                {
-                        "url": "http://google.com",
-                        "output": "target/google.png",
-                        "browser": { "width": 980 },
-                        "crop": { "left": 40, "top": 50, "width": 900, "height": 450 }
-                }
-        ]
+    "screenshots": [
+        {
+            "url": "http://google.com",
+            "output": "target/google.png",
+            "browser": { "width": 980 },
+            "crop": { "left": 40, "top": 50, "width": 900, "height": 450 }
+        }
+    ]
 }
 ```
 
