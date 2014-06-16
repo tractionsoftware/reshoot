@@ -1,13 +1,17 @@
+/****************************************************************
+
+  Traction Software, Inc. Confidential and Proprietary Information
+
+  Copyright (c) 1996-2014 Traction Software, Inc.
+  All rights reserved.
+
+****************************************************************/
+
+// PLEASE DO NOT DELETE THIS LINE -- make copyright depends on it.
 package com.tractionsoftware.reshoot;
 
-import java.awt.AWTException;
-import java.awt.HeadlessException;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -15,18 +19,9 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.WebDriver.Window;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -123,15 +118,31 @@ public class Reshoot {
      */
     public static void main(String[] args) {
 
-        CommandLine cmd = parseCommandLine(args);
-        Configuration config = parseConfigurationFile(cmd.getOptionValue('f'));
-
-        RemoteWebDriver driver = createDriver();
-        for (Screenshot screenshot : config.screenshots) {
-            takeSingleScreenshot(driver, config, screenshot);
+        if (args.length == 0) {
+            showUsageAndExit();
         }
 
-        driver.quit();
+        for (String arg : args) {
+            Configuration config = parseConfigurationFile(arg);
+
+            RemoteWebDriver driver = createDriver();
+            for (Screenshot screenshot : config.screenshots) {
+                takeSingleScreenshot(driver, config, screenshot);
+            }
+            driver.quit();
+        }
+    }
+
+    private static void showUsageAndExit() {
+        System.err.println("Reshoot uses Selenium WebDriver to take product screenshots");
+        System.err.println();
+        System.err.println("  Usage:");
+        System.err.println("    java -jar Reshoot.jar [files...]");
+        System.err.println();
+        System.err.println("  Documentation:");
+        System.err.println("    https://github.com/tractionsoftware/reshoot");
+        System.err.println();
+        System.exit(1);
     }
 
     private static void takeSingleScreenshot(RemoteWebDriver driver, Configuration configuration, Screenshot screenshot) {
@@ -193,28 +204,6 @@ public class Reshoot {
         }
     }
 
-    private static CommandLine parseCommandLine(String[] args) {
-        CommandLineParser parser = new GnuParser();
-        org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
-
-        // create the command-line options
-        Option f = OptionBuilder.hasArg().isRequired().withDescription("json configuration file").create('f');
-
-        options.addOption(f);
-
-        // attempt to parse them, printing help if it fails
-        try {
-            return parser.parse(options, args);
-        }
-        catch (ParseException e) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("com.tractionsoftware.screenshots.Screenshots", options);
-            System.exit(1);
-        }
-
-        return null;
-    }
-
     private static RemoteWebDriver createDriver() {
         return TractionWebdriverUtils.createFirefoxDriver();
         //return TractionWebdriverUtils.createChromeDriver();
@@ -263,27 +252,5 @@ public class Reshoot {
 //        }
 //        return img;
 //    }
-
-    @SuppressWarnings("unused")
-    private static void takeBrowserScreenshot(TakesScreenshot driver, File destFile) throws IOException {
-
-        File scrFile = driver.getScreenshotAs(OutputType.FILE);
-        FileUtils.copyFile(scrFile, destFile);
-    }
-
-    @SuppressWarnings("unused")
-    private static void takeFullscreenScreenshot(WebDriver driver, File destFile) throws IOException {
-
-        BufferedImage image;
-        try {
-            image = new Robot().createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
-            ImageIO.write(image, "png", destFile);
-        }
-        catch (HeadlessException | AWTException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
 
 }
