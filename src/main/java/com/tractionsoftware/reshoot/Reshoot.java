@@ -17,6 +17,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -29,97 +30,15 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.ParseException;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.WebDriver.Window;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.support.PageFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.tractionsoftware.reshoot.pages.LoginPage;
-import com.tractionsoftware.reshoot.pages.ProteusPage;
 import com.tractionsoftware.reshoot.util.TractionWebdriverUtils;
 
 public class Reshoot {
-
-    /**
-     * Represents the configuration for the screenshots which is all
-     * done using JSON. The username and password provided here will
-     * be used as a default if there is none provided for a specific
-     * screenshot.
-     */
-    public static final class Configuration {
-
-        public String username;
-        public String password;
-
-        /**
-         * A list of screenshots to take.
-         */
-        public Screenshot[] screenshots;
-
-        /**
-         * Identifies the default size of the browser. The left and top
-         * properties of Region are ignored.
-         */
-        public Region browser = null;
-    }
-
-    /**
-     * Represents the data for a single screenshot using JSON.
-     */
-    public static final class Screenshot {
-
-        /**
-         * Eventually we could support per-screenshot permissions, but
-         * it's fine to just run a separate instance for now. If we
-         * try to run with different than default username/password,
-         * we would have to logout and then login again.
-         */
-        public String username;
-        public String password;
-
-        /**
-         * The page of which a screenshot will be taken.
-         */
-        public String url;
-
-        /**
-         * The path of the output png file.
-         */
-        public String output;
-
-        /**
-         * A value of 1 indicates no zoom.
-         */
-        //public float zoom = 1;
-
-        /**
-         * Omit for no crop.
-         */
-        public Region crop = null;
-
-        /**
-         * Identifies the size of the browser. The left and top
-         * properties of Region are ignored.
-         */
-        public Region browser = null;
-    }
-
-    /**
-     * A Region is used to identify the crop area. -1 can be used to
-     * use the full width or height of the image (removing the top or
-     * left portion).
-     */
-    public static final class Region {
-
-        public int left = 0;
-        public int top = 0;
-        public int width = -1;
-        public int height = -1;
-
-    }
 
     /**
      * Takes a single argument for the configuration.
@@ -191,40 +110,64 @@ public class Reshoot {
         System.exit(1);
     }
 
+    private static Configuration parseConfigurationFile(String file) {
+        try (FileReader f = new FileReader(file)) {
+            Gson gson = new GsonBuilder().create();
+            return gson.fromJson(f, Configuration.class);
+        }
+        catch (IOException e) {
+            System.err.println("Error reading "+file+":");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static RemoteWebDriver createDriver(CommandLine cmd) {
+        if (cmd.hasOption("firefox")) {
+            return TractionWebdriverUtils.createFirefoxDriver();
+        }
+        else {
+            // cmd.hasOption("chrome")
+            return TractionWebdriverUtils.createChromeDriver();
+        }
+    }
+
     private static void takeSingleScreenshot(RemoteWebDriver driver, Configuration configuration, Screenshot screenshot) {
         driver.get(screenshot.url);
 
-        // special handling for TeamPage
-        loginAndWaitForTeampage(driver, configuration, screenshot);
+        Setup setup = getSetup(configuration, screenshot);
+        if (setup != null) {
+            setup.setup(driver, configuration, screenshot);
+        }
 
-        Region browser = notNull(screenshot.browser, configuration.browser);
+        Region browser = deferIfNull(screenshot.browser, configuration.browser);
         setBrowserSize(driver, browser);
 
         saveScreenshot(driver, screenshot);
+
+        if (setup != null) {
+            setup.teardown(driver, configuration, screenshot);
+        }
     }
 
-    private static void loginAndWaitForTeampage(RemoteWebDriver driver, Configuration configuration, Screenshot screenshot) {
-        // support top-level defaults
-        String username = notNull(screenshot.username, configuration.username);
-        String password = notNull(screenshot.password, configuration.password);
-
-        try {
-            // attempt to identify and use the login page
-            LoginPage login = PageFactory.initElements(driver, LoginPage.class);
-            login.login(username, password);
+    private static Setup getSetup(Configuration configuration, Screenshot screenshot) {
+        if (configuration.setups != null && screenshot.setup != null) {
+            Class cls;
+            try {
+                Map<String,String> setup = configuration.setups.get(screenshot.setup);
+                cls = Class.forName(setup.get("class"));
+                Setup s = (Setup) cls.newInstance();
+                s.init(setup);
+                return s;
+            }
+            catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
-        catch (Exception e) {}
-
-        try {
-            // wait to allow proteus to load content
-            ProteusPage proteus = new ProteusPage(driver, "");
-            PageFactory.initElements(driver, proteus);
-            proteus.waitForLoadingCycle();
-        }
-        catch (Exception e) {}
+        return null;
     }
 
-    private static <T> T notNull(T... list) {
+    public static <T> T deferIfNull(T... list) {
         for (T t : list) {
             if (t != null) return t;
         }
@@ -249,28 +192,7 @@ public class Reshoot {
         }
     }
 
-    private static Configuration parseConfigurationFile(String file) {
-        try (FileReader f = new FileReader(file)) {
-            Gson gson = new GsonBuilder().create();
-            return gson.fromJson(f, Configuration.class);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private static RemoteWebDriver createDriver(CommandLine cmd) {
-        if (cmd.hasOption("firefox")) {
-            return TractionWebdriverUtils.createFirefoxDriver();
-        }
-        else {
-            // cmd.hasOption("chrome")
-            return TractionWebdriverUtils.createChromeDriver();
-        }
-    }
-
-    private static boolean saveScreenshot(TakesScreenshot driver, Screenshot screenshot) {
+    private static boolean saveScreenshot(RemoteWebDriver driver, Screenshot screenshot) {
 
         // get the raw png bytes
         byte[] pngBytes = driver.getScreenshotAs(OutputType.BYTES);
@@ -282,7 +204,7 @@ public class Reshoot {
             BufferedImage img = ImageIO.read(in);
 
             // crop and zoom
-            img = cropImage(img, screenshot);
+            img = cropImage(driver, img, screenshot);
 //            Image result = zoomImage(img, screenshot);
 
             // save to file
@@ -298,12 +220,31 @@ public class Reshoot {
 
     }
 
-    private static BufferedImage cropImage(BufferedImage img, Screenshot screenshot) {
+    private static BufferedImage cropImage(RemoteWebDriver driver, BufferedImage img, Screenshot screenshot) {
         if (screenshot.crop != null) {
             Region crop = screenshot.crop;
-            return img.getSubimage(crop.left, crop.top, crop.width, crop.height);
+            int left = crop.left;
+            int top = crop.top;
+            int width = crop.width;
+            int height = crop.height;
+
+            // retina images will be twice the size, but we want to
+            // keep the crop in normal browser coordinates.
+            if (isRetina(driver, img)) {
+                left *= 2;
+                top *= 2;
+                width *= 2;
+                height *= 2;
+            }
+
+            return img.getSubimage(left, top, width, height);
         }
         return img;
+    }
+
+    private static boolean isRetina(RemoteWebDriver driver, BufferedImage img) {
+        Dimension size = driver.manage().window().getSize();
+        return (size.width == img.getWidth() / 2);
     }
 
 //    private static Image zoomImage(BufferedImage img, Screenshot screenshot) {

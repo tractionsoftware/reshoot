@@ -8,7 +8,7 @@
 ****************************************************************/
 
 // PLEASE DO NOT DELETE THIS LINE -- make copyright depends on it.
-package com.tractionsoftware.reshoot.pages;
+package com.tractionsoftware.reshoot.teampage;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;

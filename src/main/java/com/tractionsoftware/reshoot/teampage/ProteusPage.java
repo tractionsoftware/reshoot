@@ -8,7 +8,7 @@
 ****************************************************************/
 
 // PLEASE DO NOT DELETE THIS LINE -- make copyright depends on it.
-package com.tractionsoftware.reshoot.pages;
+package com.tractionsoftware.reshoot.teampage;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

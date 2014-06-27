@@ -12,11 +12,20 @@ package com.tractionsoftware.reshoot.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Platform;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+
+import com.google.common.base.Function;
 
 public class TractionWebdriverUtils {
 
@@ -77,5 +86,18 @@ public class TractionWebdriverUtils {
         return createIEDriver("9");
     }
 
+    public static WebElement waitForElement(WebDriver driver, By by) {
+        return waitForElement(driver, by, 10);
+    }
+    public static WebElement waitForElement(WebDriver driver, final By by, int seconds) {
+        Wait<WebDriver> wait = new FluentWait<WebDriver>(driver).withTimeout(seconds, TimeUnit.SECONDS).ignoring(NoSuchElementException.class);
+        WebElement elm = wait.until(new Function<WebDriver,WebElement>() {
+            @Override
+            public WebElement apply(WebDriver driver) {
+                return driver.findElement(by);
+            }
+        });
+        return elm;
+    }
 
 }
