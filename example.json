@@ -1,10 +1,18 @@
 {
+        "browser": { "width": 980 },
+        "setups": {
+                "google": {
+                        "class": "com.tractionsoftware.reshoot.example.GoogleQuery",
+                        "query": "webdriver"
+                }
+        },
         "screenshots": [
                 {
                         "url": "http://google.com",
                         "output": "target/google.png",
                         "browser": { "width": 980 },
-                        "crop": { "left": 40, "top": 50, "width": 900, "height": 450 }
+                        "crop": { "left": 110, "top": 0, "width": 680, "height": 450 },
+                        "setup": "google"
                 }
         ]
 }
