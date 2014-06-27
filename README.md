@@ -25,7 +25,7 @@ Create a configuration file `screenshots.json`:
 Run reshoot with the configuration file:
 
 ```
-java -jar Reshoot-1.0.jar screenshots.json
+java -jar Reshoot-1.1.jar screenshots.json
 ```
 
 ## Usage
@@ -44,5 +44,31 @@ Reshoot uses Selenium WebDriver to automate shooting product screenshots
     https://github.com/tractionsoftware/reshoot
 ```
 
+. Setups
+
+Setups allow you to specify a Java class to execute some WebDriver commands before and after taking the screenshot. This can be useful for login in, opening dialogs, filling out forms, etc.
+
+The example [GoogleQuery](blob/master/src/main/java/com/tractionsoftware/reshoot/example/GoogleQuery.java) shows how to add a query to Google before taking a screenshot of the results:
+
+```json
+{
+        "browser": { "width": 980 },
+        "setups": {
+                "google": {
+                        "class": "com.tractionsoftware.reshoot.example.GoogleQuery",
+                        "query": "webdriver"
+                }
+        },
+        "screenshots": [
+                {
+                        "url": "http://google.com",
+                        "output": "target/google.png",
+                        "browser": { "width": 980 },
+                        "crop": { "left": 110, "top": 0, "width": 680, "height": 450 },
+                        "setup": "google"
+                }
+        ]
+}
+```
 
 This is very much a work-in-progress. 
