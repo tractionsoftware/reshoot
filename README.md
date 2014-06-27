@@ -46,7 +46,7 @@ Reshoot uses Selenium WebDriver to automate shooting product screenshots
 
 ## Setups
 
-Setups allow you to specify a Java class to execute some WebDriver commands before and after taking the screenshot. This can be useful for login in, opening dialogs, filling out forms, etc.
+Setups allow you to specify a Java class to execute some WebDriver commands before and after taking the screenshot. This can be useful for logging in, opening dialogs, filling out forms, etc.
 
 The example [GoogleQuery](src/main/java/com/tractionsoftware/reshoot/example/GoogleQuery.java) shows how to add a query to Google before taking a screenshot of the results:
 
